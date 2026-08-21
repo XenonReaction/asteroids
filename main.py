@@ -30,6 +30,9 @@ def main():
         # This logs the game state for review
         log_state()
 
+        # Some variable we will use later
+        dt = fps_clock.tick(FRAMES_PER_SECOND)/1000
+
         # For loop use to check for game events that need to be handled
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
@@ -39,13 +42,11 @@ def main():
         screen.fill("black")
 
         # Draw player
+        player.update(dt)
         player.draw(screen)
 
         # Flip? I don't remember what this does
         pygame.display.flip()
-
-        # Some variable we will use later
-        dt = fps_clock.tick(FRAMES_PER_SECOND)/1000
 
 # Don't remember what this does. It shows up a lot in python programs
 if __name__ == "__main__":
