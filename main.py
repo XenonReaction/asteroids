@@ -5,6 +5,8 @@ from constants import SCREEN_HEIGHT
 from constants import FRAMES_PER_SECOND
 from logger import log_state
 from player import Player
+from asteroid import Asteroid
+from asteroidfield import AsteroidField
 
 def main():
     # Print statements to confirm main() is being called
@@ -14,6 +16,19 @@ def main():
 
     # Initialize pygame
     pygame.init()
+
+    # Initialize groups
+    updatable = pygame.sprite.Group()
+    drawable = pygame.sprite.Group()
+    asteroids = pygame.sprite.Group()
+
+    # Set static container fields
+    Player.containers = (updatable, drawable)
+    Asteroid.containers = (asteroids, updatable, drawable)
+    AsteroidField.containers = (updatable)
+
+    # Initialize AsteroidField
+    asteroidfield = AsteroidField()
 
     # Initialize Clock
     fps_clock = pygame.time.Clock()
@@ -42,8 +57,9 @@ def main():
         screen.fill("black")
 
         # Draw player
-        player.update(dt)
-        player.draw(screen)
+        updatable.update(dt)
+        for sprite in drawable:
+            sprite.draw(screen)
 
         # Flip? I don't remember what this does
         pygame.display.flip()
