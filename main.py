@@ -26,13 +26,13 @@ def main():
     asteroids = pygame.sprite.Group()
     shots = pygame.sprite.Group()
 
-    # Set static container fields
+    # Set class attributes to group objects for updating, drawing, and collision detection
     Player.containers = (updatable, drawable)
     Asteroid.containers = (asteroids, updatable, drawable)
     AsteroidField.containers = (updatable)
     Shot.containers = (shots, updatable, drawable)
 
-    # Initialize AsteroidField
+    # Initialize AsteroidField to spawn asteroids from random screen edges
     asteroidfield = AsteroidField()
 
     # Initialize Clock
@@ -69,6 +69,12 @@ def main():
                 log_event("player_hit")
                 print("Game over!")
                 sys.exit()
+
+            for shot in shots:
+                if shot.collides_with(asteroid):
+                    log_event("asteroid_shot")
+                    shot.kill()
+                    asteroid.kill()
 
         for sprite in drawable:
             sprite.draw(screen)
