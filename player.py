@@ -7,6 +7,9 @@ from constants import PLAYER_SPEED
 from constants import PLAYER_SHOOT_SPEED
 from constants import PLAYER_SHOOT_COOLDWON_SECONDS
 from constants import LINE_WIDTH
+
+from sounds import SHOT_SOUND
+
 from circleshape import CircleShape
 from shot import Shot
 
@@ -61,3 +64,4 @@ class Player(CircleShape):
             shot.velocity = shot.velocity.rotate(self.rotation)
             shot.velocity *= PLAYER_SHOOT_SPEED
             self.cool_down_timer = PLAYER_SHOOT_COOLDWON_SECONDS
+            SHOT_SOUND.play()

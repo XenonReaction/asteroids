@@ -9,6 +9,8 @@ from constants import SCREEN_HEIGHT
 from constants import SCREEN_WIDTH
 from logger import log_event
 
+from sounds import ASTEROID_DESTRUCTION_SOUND
+
 class Asteroid(CircleShape):
     
     def __init__(self, x: float, y: float, radius: float) -> None:
@@ -22,6 +24,8 @@ class Asteroid(CircleShape):
 
     def split(self) -> None:
         self.kill()
+
+        ASTEROID_DESTRUCTION_SOUND.play()
 
         if self.radius <= ASTEROID_MIN_RADIUS:
             return
