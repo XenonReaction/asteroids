@@ -11,7 +11,7 @@ from player import Player
 from asteroid import Asteroid
 from asteroidfield import AsteroidField
 from shot import Shot
-from sounds import PLAYER_DEATH_SOUND
+from sounds import SoundMixer
 
 def main():
     # Print statements to confirm main() is being called
@@ -27,6 +27,9 @@ def main():
     drawable = pygame.sprite.Group()
     asteroids = pygame.sprite.Group()
     shots = pygame.sprite.Group()
+
+    # Initialize a SoundMixer object
+    sound_mixer = SoundMixer()
 
     # Set class attributes to group objects for updating, drawing, and collision detection
     Player.containers = (updatable, drawable)
@@ -68,7 +71,7 @@ def main():
 
         for asteroid in asteroids:
             if player.collides_with(asteroid):
-                PLAYER_DEATH_SOUND.play()
+                sound_mixer.play("player_death")
                 log_event("player_hit")
                 print("Game over!")
                 time.sleep(2)

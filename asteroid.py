@@ -9,12 +9,13 @@ from constants import SCREEN_HEIGHT
 from constants import SCREEN_WIDTH
 from logger import log_event
 
-from sounds import ASTEROID_DESTRUCTION_SOUND
+from sounds import SoundMixer
 
 class Asteroid(CircleShape):
     
     def __init__(self, x: float, y: float, radius: float) -> None:
         super().__init__(x, y, radius)
+        self.sound_mixer = SoundMixer()
 
     def draw(self, screen: "Screen"):
         pygame.draw.circle(screen, ASTEROID_COLOR, self.position, self.radius, ASTEROID_LINE_WIDTH)
@@ -25,7 +26,7 @@ class Asteroid(CircleShape):
     def split(self) -> None:
         self.kill()
 
-        ASTEROID_DESTRUCTION_SOUND.play()
+        self.sound_mixer.play("asteroid_destruction")
 
         if self.radius <= ASTEROID_MIN_RADIUS:
             return

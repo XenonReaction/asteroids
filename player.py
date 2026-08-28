@@ -8,7 +8,7 @@ from constants import PLAYER_SHOOT_SPEED
 from constants import PLAYER_SHOOT_COOLDWON_SECONDS
 from constants import LINE_WIDTH
 
-from sounds import SHOT_SOUND
+from sounds import SoundMixer
 
 from circleshape import CircleShape
 from shot import Shot
@@ -18,6 +18,7 @@ class Player(CircleShape):
         super().__init__(x, y, PLAYER_RADIUS)
         self.rotation = 0
         self.cool_down_timer = 0
+        self.sound_mixer = SoundMixer()
 
     def triangle(self) -> list[pygame.Vector2]:
         forward = pygame.Vector2(0, 1).rotate(self.rotation)
@@ -64,4 +65,4 @@ class Player(CircleShape):
             shot.velocity = shot.velocity.rotate(self.rotation)
             shot.velocity *= PLAYER_SHOOT_SPEED
             self.cool_down_timer = PLAYER_SHOOT_COOLDWON_SECONDS
-            SHOT_SOUND.play()
+            self.sound_mixer.play("shot")
