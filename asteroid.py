@@ -5,8 +5,7 @@ from circleshape import CircleShape
 from constants import ASTEROID_COLOR
 from constants import ASTEROID_LINE_WIDTH
 from constants import ASTEROID_MIN_RADIUS
-from constants import SCREEN_HEIGHT
-from constants import SCREEN_WIDTH
+from constants import ASTEROID_MAX_RADIUS
 from logger import log_event
 
 from sounds import SoundMixer
@@ -22,6 +21,13 @@ class Asteroid(CircleShape):
 
     def update(self, dt: float) -> None:
         self.position += self.velocity * dt
+
+        # Remove asteroids that drift far off screen so they don't pile up forever
+        width, height = pygame.display.get_surface().get_size()
+        margin = ASTEROID_MAX_RADIUS * 2
+        if not (-margin <= self.position.x <= width + margin
+                and -margin <= self.position.y <= height + margin):
+            self.kill()
 
     def split(self) -> None:
         self.kill()

@@ -5,7 +5,9 @@ import pygame
 from asteroid import Asteroid
 from constants import *
 
-Edge = tuple[pygame.Vector2, Callable[[float], pygame.Vector2]]
+# Each edge is (direction asteroids move in, function giving a spawn point from
+# a 0-1 position along the edge and the current screen width and height)
+Edge = tuple[pygame.Vector2, Callable[[float, int, int], pygame.Vector2]]
 
 
 class AsteroidField(pygame.sprite.Sprite):
@@ -14,22 +16,22 @@ class AsteroidField(pygame.sprite.Sprite):
     edges: list[Edge] = [
         (
             pygame.Vector2(1, 0),
-            lambda y: pygame.Vector2(-ASTEROID_MAX_RADIUS, y * SCREEN_HEIGHT),
+            lambda y, width, height: pygame.Vector2(-ASTEROID_MAX_RADIUS, y * height),
         ),
         (
             pygame.Vector2(-1, 0),
-            lambda y: pygame.Vector2(
-                SCREEN_WIDTH + ASTEROID_MAX_RADIUS, y * SCREEN_HEIGHT
+            lambda y, width, height: pygame.Vector2(
+                width + ASTEROID_MAX_RADIUS, y * height
             ),
         ),
         (
             pygame.Vector2(0, 1),
-            lambda x: pygame.Vector2(x * SCREEN_WIDTH, -ASTEROID_MAX_RADIUS),
+            lambda x, width, height: pygame.Vector2(x * width, -ASTEROID_MAX_RADIUS),
         ),
         (
             pygame.Vector2(0, -1),
-            lambda x: pygame.Vector2(
-                x * SCREEN_WIDTH, SCREEN_HEIGHT + ASTEROID_MAX_RADIUS
+            lambda x, width, height: pygame.Vector2(
+                x * width, height + ASTEROID_MAX_RADIUS
             ),
         ),
     ]
@@ -54,6 +56,7 @@ class AsteroidField(pygame.sprite.Sprite):
             speed = random.randint(40, 100)
             velocity = edge[0] * speed
             velocity = velocity.rotate(random.randint(-30, 30))
-            position = edge[1](random.uniform(0, 1))
+            width, height = pygame.display.get_surface().get_size()
+            position = edge[1](random.uniform(0, 1), width, height)
             kind = random.randint(1, ASTEROID_KINDS)
             self.spawn(ASTEROID_MIN_RADIUS * kind, position, velocity)

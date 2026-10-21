@@ -1,4 +1,4 @@
-# Screen
+# Screen (starting window size on desktop, the browser uses the page size)
 SCREEN_WIDTH = 3200
 SCREEN_HEIGHT = 1200
 FRAMES_PER_SECOND = 60
@@ -33,3 +33,17 @@ ASTEROID_DESTRUCTION_SOUNDS_FILE_PATHS = [
     "./resources/sounds/8_bit_explosion_10.ogg",
     "./resources/sounds/8_bit_explosion_11.ogg"
 ]
+
+# Main menu
+MENU_TITLE = "Asteroids"
+MENU_TITLE_FONT_SIZE = 160
+MENU_TEXT_COLOR = "white"
+MENU_START_ASTEROIDS = 10
+MENU_BUTTON_TEXT = "START"
+MENU_BUTTON_FONT_SIZE = 56
+MENU_BUTTON_WIDTH = 260
+MENU_BUTTON_HEIGHT = 80
+MENU_BUTTON_LINE_WIDTH = 3
+MENU_BUTTON_HOVER_COLOR = "gray20"
+MENU_BUTTON_BOB_PIXELS = 12
+MENU_BUTTON_BOB_SPEED = 2
