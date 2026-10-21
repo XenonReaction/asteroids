@@ -12,3 +12,6 @@ wheels/
 # JSON files
 game_state.jsonl
 game_events.jsonl
+
+# Windows download metadata
+*:Zone.Identifier

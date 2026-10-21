@@ -1,6 +1,5 @@
+import asyncio
 import pygame
-import sys
-import time
 
 from constants import SCREEN_WIDTH
 from constants import SCREEN_HEIGHT
@@ -13,7 +12,7 @@ from asteroidfield import AsteroidField
 from shot import Shot
 from sounds import SoundMixer
 
-def main():
+async def main():
     # Print statements to confirm main() is being called
     print(f"Starting Asteroids with pygame version: {pygame.version.ver}")
     print(f"Screen width: {SCREEN_WIDTH}")
@@ -74,8 +73,8 @@ def main():
                 sound_mixer.play("player_death")
                 log_event("player_hit")
                 print("Game over!")
-                time.sleep(2)
-                sys.exit()
+                await asyncio.sleep(2)
+                return
 
             for shot in shots:
                 if shot.collides_with(asteroid):
@@ -89,6 +88,9 @@ def main():
         # Flip? I don't remember what this does
         pygame.display.flip()
 
+        # Hand control back to the browser each frame so the page doesn't freeze
+        await asyncio.sleep(0)
+
 # Don't remember what this does. It shows up a lot in python programs
 if __name__ == "__main__":
-    main()
+    asyncio.run(main())
