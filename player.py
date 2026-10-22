@@ -1,3 +1,5 @@
+import random
+
 import pygame
 
 from constants import PLAYER_RADIUS
@@ -7,12 +9,14 @@ from constants import PLAYER_SPEED
 from constants import PLAYER_SHOOT_SPEED
 from constants import PLAYER_SHOOT_COOLDWON_SECONDS
 from constants import LINE_WIDTH
+from constants import EXHAUST_DOTS_PER_SECOND
 
 from sounds import SoundMixer
 from progress_bar import ProgressBar
 
 from circleshape import CircleShape
 from shot import Shot
+from exhaust import Exhaust
 
 
 def clip_to_band(points: list[pygame.Vector2], origin: pygame.Vector2, direction: pygame.Vector2,
@@ -47,6 +51,7 @@ class Player(CircleShape):
         super().__init__(x, y, PLAYER_RADIUS)
         self.rotation = 0
         self.cool_down_timer = 0
+        self.exhaust_timer = 0  # seconds until the next exhaust dot
         self.sound_mixer = SoundMixer()
 
     def triangle(self) -> list[pygame.Vector2]:
@@ -83,13 +88,18 @@ class Player(CircleShape):
             self.rotate(-1 * dt)
         if keys[pygame.K_d] or keys[pygame.K_RIGHT]:
             self.rotate(dt)
-        if keys[pygame.K_w] or keys[pygame.K_UP]:
+        forward = keys[pygame.K_w] or keys[pygame.K_UP]
+        backward = keys[pygame.K_s] or keys[pygame.K_DOWN]
+        if forward:
             self.move(dt)
-        if keys[pygame.K_s] or keys[pygame.K_DOWN]:
+            self.exhaust(dt, reversing=False)
+        if backward:
             self.move(-1 * dt)
+            self.exhaust(dt, reversing=True)
         if keys[pygame.K_SPACE]:
             self.shoot()
 
+        self.sound_mixer.engine(forward or backward)
         self.cool_down_timer -= dt
 
     def move(self, dt: float) -> None:
@@ -97,6 +107,17 @@ class Player(CircleShape):
         rotated_vector = unit_vector.rotate(self.rotation)
         rotated_with_speed_vector = rotated_vector * PLAYER_SPEED * dt
         self.position += rotated_with_speed_vector
+
+    def exhaust(self, dt: float, reversing: bool) -> None:
+        # Dots come out of the back of the ship, or out of the nose when reversing
+        forward = pygame.Vector2(0, 1).rotate(self.rotation)
+        direction = forward if reversing else -forward
+
+        self.exhaust_timer -= dt
+        while self.exhaust_timer <= 0:
+            Exhaust(self.position + direction * self.radius, direction)
+            # Random gaps between dots, averaging EXHAUST_DOTS_PER_SECOND
+            self.exhaust_timer += random.expovariate(EXHAUST_DOTS_PER_SECOND)
 
     def shoot(self) -> None:
         if self.cool_down_timer <= 0:

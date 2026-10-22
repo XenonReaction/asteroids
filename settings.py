@@ -1,3 +1,4 @@
+import string
 from dataclasses import dataclass
 
 import pygame
@@ -18,6 +19,9 @@ from constants import SETTINGS_CHOSEN_COLOR
 from constants import SETTINGS_CURSOR_COLOR
 from constants import SETTINGS_CURSOR_LINE_WIDTH
 from constants import SETTINGS_INACTIVE_TEXT_COLOR
+from constants import WIN_CODE_LETTERS
+from constants import WIN_CODE_MULTIPLIER
+from constants import WIN_CODE_OFFSET
 from constants import MENU_TEXT_COLOR
 from constants import MENU_BUTTON_WIDTH
 from constants import MENU_BUTTON_HEIGHT
@@ -67,6 +71,26 @@ class Settings:
     @staticmethod
     def max_score() -> int:
         return SETTING_MAX * len(SETTING_ROWS)
+
+    def code(self) -> str:
+        """Letters that stand for this exact combination of settings. No two combinations share a code."""
+        # Number every combination, from 0 for all 1s up to 999 for all 10s
+        values_per_setting = SETTING_MAX - SETTING_MIN + 1
+        number = 0
+        for name in SETTING_ROWS:
+            number = number * values_per_setting + getattr(self, name) - SETTING_MIN
+
+        # Shuffle the numbers. Multiplying by a number with no factors in common with
+        # 26 ** WIN_CODE_LETTERS never sends two different numbers to the same place.
+        alphabet = string.ascii_uppercase
+        number = (number * WIN_CODE_MULTIPLIER + WIN_CODE_OFFSET) % len(alphabet) ** WIN_CODE_LETTERS
+
+        # Write the number in base 26, with A to Z as the digits
+        letters = ""
+        for _ in range(WIN_CODE_LETTERS):
+            number, digit = divmod(number, len(alphabet))
+            letters = alphabet[digit] + letters
+        return letters
 
 
 # The Settings attribute each row changes, in order from top to bottom

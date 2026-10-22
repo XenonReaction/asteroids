@@ -19,6 +19,8 @@ from constants import MENU_BUTTON_SELECTED_COLOR
 from constants import MENU_BUTTON_BOB_PIXELS
 from constants import MENU_BUTTON_BOB_SPEED
 from constants import MENU_OVERLAY_OPACITY
+from constants import WIN_CODE_FONT_SIZE
+from constants import WIN_CODE_MARGIN
 from display import fit_to_window
 from sounds import SoundMixer
 
@@ -57,6 +59,14 @@ def draw_heading(screen: pygame.Surface, title: str, subtitle: str | None = None
     draw_title(screen, title, height*0.35, opacity)
     if subtitle:
         draw_title(screen, subtitle, height*0.45, opacity, MENU_SUBTITLE_FONT_SIZE)
+
+
+def draw_corner_text(screen: pygame.Surface, text: str, opacity: int = 255) -> None:
+    """Small text in the bottom right corner, like the settings code on the win screen."""
+    label = get_font(WIN_CODE_FONT_SIZE).render(text, True, MENU_TEXT_COLOR)
+    label.set_alpha(opacity)
+    corner = (screen.get_width() - WIN_CODE_MARGIN, screen.get_height() - WIN_CODE_MARGIN)
+    screen.blit(label, label.get_rect(bottomright=corner))
 
 
 def draw_shade(screen: pygame.Surface, opacity: int = MENU_OVERLAY_OPACITY) -> None:
@@ -156,11 +166,13 @@ async def menu_screen(
     options: list[str],
     escape_option: str | None = None,
     subtitle: str | None = None,
+    corner_text: str | None = None,
 ) -> str | None:
     """Show a menu over the dimmed, frozen game until an option is picked.
 
     Pressing Escape picks `escape_option` if one is given. `subtitle` is a smaller line
-    under the title. Returns None if the window was closed.
+    under the title, and `corner_text` goes in the bottom right corner.
+    Returns None if the window was closed.
     """
     menu = ButtonMenu(options)
 
@@ -185,6 +197,8 @@ async def menu_screen(
         draw_shade(screen)
 
         draw_heading(screen, title, subtitle)
+        if corner_text:
+            draw_corner_text(screen, corner_text)
 
         # Buttons move down a little to make room for a subtitle
         menu.draw(screen, height * (0.62 if subtitle else 0.55))

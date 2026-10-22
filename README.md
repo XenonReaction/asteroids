@@ -8,6 +8,8 @@ Click the page once it loads to start (browsers need a click before they play so
 
 ## How to play
 
+A short intro plays when the game opens. Press any key or click to skip it.
+
 Shoot asteroids to fill the progress bar at the top of the screen. Every asteroid you split adds to the bar, and filling it wins the game. As the bar fills, the asteroids change color and come at you faster and more often. Touching an asteroid sends you back to the main menu.
 
 ## Settings
@@ -22,7 +24,7 @@ Pick **SETTINGS** on the main menu to set the difficulty. Each setting has a row
 
 These stack with the speed-up that happens as the bar fills. Settings last until you reload the page.
 
-When you win, your score is the three settings added together, out of 30. Harder settings give a higher score.
+When you win, your score is the three settings added together, out of 30. Harder settings give a higher score. The 4 letters in the bottom right corner of the win screen are a code for the exact settings you played on, so no two combinations of settings share a code.
 
 ## Controls
 
