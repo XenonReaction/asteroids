@@ -2,22 +2,60 @@ import pygame
 import random
 
 from circleshape import CircleShape
-from constants import ASTEROID_COLOR
 from constants import ASTEROID_LINE_WIDTH
 from constants import ASTEROID_MIN_RADIUS
 from constants import ASTEROID_MAX_RADIUS
+from constants import ASTEROID_MIN_CRATERS
+from constants import ASTEROID_MAX_CRATERS
+from constants import ASTEROID_CRATER_MIN_SIZE
+from constants import ASTEROID_CRATER_MAX_SIZE
+from constants import ASTEROID_CRATER_LINE_WIDTH
+from constants import ASTEROID_SPLIT_POINTS
 from logger import log_event
+from progress_bar import ProgressBar
 
 from sounds import SoundMixer
 
 class Asteroid(CircleShape):
-    
+    # Set by the game, splits fill it up and it decides what color asteroids are
+    progress_bar: ProgressBar
+
     def __init__(self, x: float, y: float, radius: float) -> None:
         super().__init__(x, y, radius)
         self.sound_mixer = SoundMixer()
+        self.craters = self.make_craters()
+
+    def make_craters(self) -> list[tuple[pygame.Vector2, float]]:
+        """Pick crater circles (offset from center, radius) that don't touch each other or the edge."""
+        craters = []
+        count = random.randint(ASTEROID_MIN_CRATERS, ASTEROID_MAX_CRATERS)
+
+        # Try random spots until enough craters fit, giving up after a while just in case
+        for _ in range(100):
+            if len(craters) == count:
+                break
+
+            crater_radius = random.uniform(self.radius * ASTEROID_CRATER_MIN_SIZE, self.radius * ASTEROID_CRATER_MAX_SIZE)
+
+            # Furthest from the center the crater can be and still leave a gap before the outline
+            max_distance = self.radius - ASTEROID_LINE_WIDTH - crater_radius - 1
+            offset = pygame.Vector2(random.uniform(0, max_distance), 0).rotate(random.uniform(0, 360))
+
+            # Keep a gap between this crater and every other crater
+            if all(offset.distance_to(other_offset) > crater_radius + other_radius + 1
+                   for other_offset, other_radius in craters):
+                craters.append((offset, crater_radius))
+
+        return craters
 
     def draw(self, screen: "Screen"):
-        pygame.draw.circle(screen, ASTEROID_COLOR, self.position, self.radius, ASTEROID_LINE_WIDTH)
+        # Fill with black first so asteroids hide what's behind them, then draw the outline
+        color = self.progress_bar.current_color()
+        pygame.draw.circle(screen, "black", self.position, self.radius)
+        pygame.draw.circle(screen, color, self.position, self.radius, ASTEROID_LINE_WIDTH)
+
+        for offset, crater_radius in self.craters:
+            pygame.draw.circle(screen, color, self.position + offset, crater_radius, ASTEROID_CRATER_LINE_WIDTH)
 
     def update(self, dt: float) -> None:
         self.position += self.velocity * dt
@@ -32,7 +70,20 @@ class Asteroid(CircleShape):
     def split(self) -> None:
         self.kill()
 
-        self.sound_mixer.play("asteroid_destruction")
+        # Play a chord whenever this split changes the asteroids' color
+        old_section = self.progress_bar.section_index()
+        self.progress_bar.add(ASTEROID_SPLIT_POINTS)
+        new_section = self.progress_bar.section_index()
+        if new_section != old_section:
+            self.sound_mixer.play_chord(new_section - 1)
+
+        # Each asteroid size has its own explosion sound
+        if self.radius >= ASTEROID_MAX_RADIUS:
+            self.sound_mixer.play("asteroid_destruction_large")
+        elif self.radius > ASTEROID_MIN_RADIUS:
+            self.sound_mixer.play("asteroid_destruction_medium")
+        else:
+            self.sound_mixer.play("asteroid_destruction_small")
 
         if self.radius <= ASTEROID_MIN_RADIUS:
             return
