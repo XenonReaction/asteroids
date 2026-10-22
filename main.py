@@ -5,25 +5,16 @@ import pygame
 from constants import FRAMES_PER_SECOND
 from constants import ASTEROID_KINDS
 from constants import ASTEROID_MIN_RADIUS
-from constants import MENU_TITLE
 from constants import MENU_START_ASTEROIDS
 from constants import MENU_OVERLAY_OPACITY
-from constants import MENU_BUTTON_TEXT
-from constants import MENU_SETTINGS_TEXT
-from constants import SETTINGS_TITLE
-from constants import SETTINGS_BACK_TEXT
-from constants import PAUSE_TITLE
-from constants import PAUSE_CONTINUE_TEXT
-from constants import PAUSE_QUIT_TEXT
-from constants import WIN_TITLE
-from constants import WIN_PLAY_AGAIN_TEXT
-from constants import WIN_EXIT_TEXT
 from constants import WIN_FREEZE_SECONDS
 from constants import WIN_HOLD_SECONDS
+from constants import version
 from display import create_screen
 from display import fit_to_window
 from menu import ButtonMenu
 from menu import draw_title
+from menu import draw_heading
 from menu import draw_shade
 from menu import menu_screen
 from menu import timed_screen
@@ -111,7 +102,7 @@ async def main_menu(fps_clock: pygame.time.Clock, background: Starfield, setting
         asteroid.velocity = pygame.Vector2(random.randint(40, 100), 0).rotate(random.uniform(0, 360))
 
     # The buttons sit under the title and slowly bob up and down
-    menu = ButtonMenu([MENU_BUTTON_TEXT, MENU_SETTINGS_TEXT], bob=True)
+    menu = ButtonMenu([version().MENU_BUTTON_TEXT, version().MENU_SETTINGS_TEXT], bob=True)
     settings_menu = SettingsMenu(settings)
     showing_settings = False
 
@@ -127,13 +118,13 @@ async def main_menu(fps_clock: pygame.time.Clock, background: Starfield, setting
                 return False
 
             if showing_settings:
-                if settings_menu.handle_event(event) == SETTINGS_BACK_TEXT:
+                if settings_menu.handle_event(event) == SettingsMenu.BACK:
                     showing_settings = False
             else:
                 choice = menu.handle_event(event)
-                if choice == MENU_BUTTON_TEXT:
+                if choice == version().MENU_BUTTON_TEXT:
                     return True
-                if choice == MENU_SETTINGS_TEXT:
+                if choice == version().MENU_SETTINGS_TEXT:
                     showing_settings = True
 
         screen = fit_to_window()
@@ -148,10 +139,10 @@ async def main_menu(fps_clock: pygame.time.Clock, background: Starfield, setting
             sprite.draw(screen)
 
         if showing_settings:
-            draw_title(screen, SETTINGS_TITLE, height*0.2)
+            draw_title(screen, version().SETTINGS_TITLE, height*0.2)
             settings_menu.draw(screen, height*0.4)
         else:
-            draw_title(screen, MENU_TITLE, height*0.3)
+            draw_title(screen, version().MENU_TITLE, height*0.3)
             menu.draw(screen, height*0.55)
 
         pygame.display.flip()
@@ -209,10 +200,10 @@ async def play(fps_clock: pygame.time.Clock, background: Starfield, settings: Se
             layer.set_alpha(asteroid_opacity)
             screen.blit(layer, (0, 0))
 
-        # Player and shots go on top of the asteroids
-        for sprite in drawable:
-            if sprite not in asteroids:
-                sprite.draw(screen)
+        # Shots go on top of the asteroids, and the player on top of the shots
+        for shot in shots:
+            shot.draw(screen)
+        player.draw(screen)
 
         # Draw the progress bar last so it's on top of everything
         progress_bar.draw(screen)
@@ -236,12 +227,12 @@ async def play(fps_clock: pygame.time.Clock, background: Starfield, settings: Se
 
             # Escape pauses the game
             if event.type == pygame.KEYDOWN and event.key == pygame.K_ESCAPE:
-                choice = await menu_screen(fps_clock, draw_game, PAUSE_TITLE,
-                                           [PAUSE_CONTINUE_TEXT, PAUSE_QUIT_TEXT],
-                                           escape_option=PAUSE_CONTINUE_TEXT)
+                choice = await menu_screen(fps_clock, draw_game, version().PAUSE_TITLE,
+                                           [version().PAUSE_CONTINUE_TEXT, version().PAUSE_QUIT_TEXT],
+                                           escape_option=version().PAUSE_CONTINUE_TEXT)
                 if choice is None:
                     return WINDOW_CLOSED
-                if choice == PAUSE_QUIT_TEXT:
+                if choice == version().PAUSE_QUIT_TEXT:
                     return BACK_TO_MENU
 
                 # Don't count the time spent paused
@@ -270,6 +261,9 @@ async def play(fps_clock: pygame.time.Clock, background: Starfield, settings: Se
         if progress_bar.fraction() >= 1:
             log_event("player_won")
 
+            # Score is the sum of the settings, so harder settings score higher
+            score_text = version().WIN_SCORE_TEXT.format(score=settings.score(), max_score=Settings.max_score())
+
             # Everything freezes in place for a moment
             if not await timed_screen(fps_clock, WIN_FREEZE_SECONDS, lambda screen, t: draw_game(screen)):
                 return WINDOW_CLOSED
@@ -278,7 +272,7 @@ async def play(fps_clock: pygame.time.Clock, background: Starfield, settings: Se
             def fade(screen: pygame.Surface, t: float) -> None:
                 draw_game(screen, asteroid_opacity=int(255 * (1 - t)))
                 draw_shade(screen, int(MENU_OVERLAY_OPACITY * t))
-                draw_title(screen, WIN_TITLE, screen.get_height()*0.35, opacity=int(255 * t))
+                draw_heading(screen, version().WIN_TITLE, score_text, opacity=int(255 * t))
 
             sound_mixer.play("win")
             if not await timed_screen(fps_clock, sound_mixer.win_length(), fade):
@@ -292,16 +286,17 @@ async def play(fps_clock: pygame.time.Clock, background: Starfield, settings: Se
             def hold(screen: pygame.Surface, t: float) -> None:
                 draw_game(screen)
                 draw_shade(screen)
-                draw_title(screen, WIN_TITLE, screen.get_height()*0.35)
+                draw_heading(screen, version().WIN_TITLE, score_text)
 
             if not await timed_screen(fps_clock, WIN_HOLD_SECONDS, hold):
                 return WINDOW_CLOSED
 
-            choice = await menu_screen(fps_clock, draw_game, WIN_TITLE,
-                                       [WIN_PLAY_AGAIN_TEXT, WIN_EXIT_TEXT])
+            choice = await menu_screen(fps_clock, draw_game, version().WIN_TITLE,
+                                       [version().WIN_PLAY_AGAIN_TEXT, version().WIN_EXIT_TEXT],
+                                       subtitle=score_text)
             if choice is None:
                 return WINDOW_CLOSED
-            if choice == WIN_PLAY_AGAIN_TEXT:
+            if choice == version().WIN_PLAY_AGAIN_TEXT:
                 return PLAY_AGAIN
             return BACK_TO_MENU
 

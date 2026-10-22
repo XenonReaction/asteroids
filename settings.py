@@ -4,10 +4,11 @@ import pygame
 
 from constants import SETTING_MIN
 from constants import SETTING_MAX
-from constants import SETTINGS_ASTEROID_AMOUNT_STEP
-from constants import SETTINGS_ASTEROID_SPEED_STEP
+from constants import SETTINGS_ASTEROID_AMOUNT_EASIEST
+from constants import SETTINGS_ASTEROID_AMOUNT_HARDEST
+from constants import SETTINGS_ASTEROID_SPEED_EASIEST
+from constants import SETTINGS_ASTEROID_SPEED_HARDEST
 from constants import SETTINGS_FONT_SIZE
-from constants import SETTINGS_BACK_TEXT
 from constants import SETTINGS_SQUARE_SIZE
 from constants import SETTINGS_SQUARE_GAP
 from constants import SETTINGS_SQUARE_LINE_WIDTH
@@ -22,6 +23,7 @@ from constants import MENU_BUTTON_WIDTH
 from constants import MENU_BUTTON_HEIGHT
 from constants import MENU_BUTTON_LINE_WIDTH
 from constants import MENU_BUTTON_SELECTED_COLOR
+from constants import version
 from menu import get_font
 from menu import UP_KEYS
 from menu import DOWN_KEYS
@@ -29,6 +31,12 @@ from menu import LEFT_KEYS
 from menu import RIGHT_KEYS
 from menu import SELECT_KEYS
 from sounds import SoundMixer
+
+
+def between(easiest: float, hardest: float, setting: int) -> float:
+    """The value for a setting, spread evenly from `easiest` at 1 to `hardest` at 10."""
+    fraction = (setting - SETTING_MIN) / (SETTING_MAX - SETTING_MIN)
+    return easiest + (hardest - easiest) * fraction
 
 
 @dataclass
@@ -40,25 +48,38 @@ class Settings:
     destruction_value: int = SETTING_MIN
 
     def spawn_multiplier(self) -> float:
-        # How many times more often asteroids spawn than at setting 1
-        return 1 + (self.asteroid_amount - 1) * SETTINGS_ASTEROID_AMOUNT_STEP
+        # How many times more often asteroids spawn than normal
+        return between(SETTINGS_ASTEROID_AMOUNT_EASIEST, SETTINGS_ASTEROID_AMOUNT_HARDEST, self.asteroid_amount)
 
     def speed_multiplier(self) -> float:
-        # How many times faster asteroids move than at setting 1
-        return 1 + (self.asteroid_speed - 1) * SETTINGS_ASTEROID_SPEED_STEP
+        # How many times faster asteroids move than normal
+        return between(SETTINGS_ASTEROID_SPEED_EASIEST, SETTINGS_ASTEROID_SPEED_HARDEST, self.asteroid_speed)
 
     def split_points(self) -> int:
         # Setting 1 is worth the most (10 points per split) and setting 10 the least (1 point),
         # so a higher setting is always harder
         return SETTING_MAX + 1 - self.destruction_value
 
+    def score(self) -> int:
+        # Harder settings give a higher score
+        return self.asteroid_amount + self.asteroid_speed + self.destruction_value
 
-# (label shown on screen, Settings attribute it changes)
-SETTING_ROWS = [
-    ("Number of asteroids", "asteroid_amount"),
-    ("Asteroid speed", "asteroid_speed"),
-    ("Asteroid destruction value", "destruction_value"),
-]
+    @staticmethod
+    def max_score() -> int:
+        return SETTING_MAX * len(SETTING_ROWS)
+
+
+# The Settings attribute each row changes, in order from top to bottom
+SETTING_ROWS = ["asteroid_amount", "asteroid_speed", "destruction_value"]
+
+
+def setting_labels() -> list[str]:
+    # The label shown for each row, in the same order as SETTING_ROWS
+    return [
+        version().SETTINGS_ASTEROID_AMOUNT_TEXT,
+        version().SETTINGS_ASTEROID_SPEED_TEXT,
+        version().SETTINGS_DESTRUCTION_VALUE_TEXT,
+    ]
 
 
 class SettingsMenu:
@@ -67,6 +88,9 @@ class SettingsMenu:
     W / S or Up / Down move between rows. A / D or Left / Right move the cursor along a row,
     and Space or Enter sets that row to the number the cursor is on.
     """
+
+    # Returned by handle_event when the player leaves the settings menu
+    BACK = "back"
 
     def __init__(self, settings: Settings) -> None:
         self.settings = settings
@@ -77,7 +101,7 @@ class SettingsMenu:
         return self.row == len(SETTING_ROWS)
 
     def value(self, row: int) -> int:
-        return getattr(self.settings, SETTING_ROWS[row][1])
+        return getattr(self.settings, SETTING_ROWS[row])
 
     def select_row(self, row: int) -> None:
         # One row per setting, plus the Back button
@@ -88,13 +112,13 @@ class SettingsMenu:
             self.cursor = self.value(self.row)
 
     def handle_event(self, event: pygame.event.Event) -> str | None:
-        """Returns SETTINGS_BACK_TEXT when the player leaves the settings menu."""
+        """Returns SettingsMenu.BACK when the player leaves the settings menu."""
         if event.type != pygame.KEYDOWN:
             return None
 
         if event.key == pygame.K_ESCAPE:
             self.sound_mixer.play("menu_select")
-            return SETTINGS_BACK_TEXT
+            return self.BACK
 
         if event.key in UP_KEYS:
             self.select_row(self.row - 1)
@@ -111,15 +135,15 @@ class SettingsMenu:
         elif event.key in SELECT_KEYS:
             self.sound_mixer.play("menu_select")
             if self.on_back():
-                return SETTINGS_BACK_TEXT
-            setattr(self.settings, SETTING_ROWS[self.row][1], self.cursor)
+                return self.BACK
+            setattr(self.settings, SETTING_ROWS[self.row], self.cursor)
 
         return None
 
     def draw(self, screen: pygame.Surface, top: float) -> None:
         """Draw the rows in a column, with the first one centered at `top`."""
         screen_width = screen.get_width()
-        labels = [label for label, _ in SETTING_ROWS]
+        labels = setting_labels()
         square_count = SETTING_MAX - SETTING_MIN + 1
 
         # Everything shrinks together on narrow screens so the rows still fit
@@ -171,5 +195,5 @@ class SettingsMenu:
         back.center = (screen_width / 2, top + len(SETTING_ROWS) * row_step + MENU_BUTTON_HEIGHT * scale / 2)
         pygame.draw.rect(screen, MENU_BUTTON_SELECTED_COLOR if self.on_back() else "black", back)
         pygame.draw.rect(screen, MENU_TEXT_COLOR, back, MENU_BUTTON_LINE_WIDTH)
-        back_text = font.render(SETTINGS_BACK_TEXT, True, MENU_TEXT_COLOR)
+        back_text = font.render(version().SETTINGS_BACK_TEXT, True, MENU_TEXT_COLOR)
         screen.blit(back_text, back_text.get_rect(center=back.center))

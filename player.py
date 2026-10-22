@@ -58,6 +58,9 @@ class Player(CircleShape):
         return [a, b, c]
 
     def draw(self, screen: "Screen") -> None:
+        # Fill with black first so the ship hides what's behind it
+        pygame.draw.polygon(screen, "black", self.triangle())
+
         # Fill the ship like the progress bar, starting at the back and moving toward the nose
         forward = pygame.Vector2(0, 1).rotate(self.rotation)
         back = self.position - forward * self.radius

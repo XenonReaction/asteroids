@@ -14,3 +14,10 @@ class Shot(CircleShape):
 
     def update(self, dt: float) -> None:
         self.position += self.velocity * dt
+
+        # Remove shots once they leave the screen, otherwise every missed shot
+        # keeps flying (and being checked against every asteroid) forever
+        width, height = pygame.display.get_surface().get_size()
+        if not (-self.radius <= self.position.x <= width + self.radius
+                and -self.radius <= self.position.y <= height + self.radius):
+            self.kill()

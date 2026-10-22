@@ -16,11 +16,13 @@ Pick **SETTINGS** on the main menu to set the difficulty. Each setting has a row
 
 | Setting | What it changes | 1 | 10 |
 | --- | --- | --- | --- |
-| Number of asteroids | How often new asteroids appear | normal | 2.8x as often |
-| Asteroid speed | How fast new asteroids move | normal | 2.35x as fast |
+| Number of asteroids | How often new asteroids appear | half as often as normal | 2.8x as often |
+| Asteroid speed | How fast new asteroids move | 0.6x normal speed | 2.35x as fast |
 | Asteroid destruction value | How much each split fills the bar | 10 points (50 splits to win) | 1 point (500 splits to win) |
 
 These stack with the speed-up that happens as the bar fills. Settings last until you reload the page.
+
+When you win, your score is the three settings added together, out of 30. Harder settings give a higher score.
 
 ## Controls
 

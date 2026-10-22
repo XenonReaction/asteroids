@@ -7,6 +7,7 @@ import pygame
 
 from constants import FRAMES_PER_SECOND
 from constants import MENU_TITLE_FONT_SIZE
+from constants import MENU_SUBTITLE_FONT_SIZE
 from constants import MENU_TEXT_COLOR
 from constants import MENU_BUTTON_FONT_SIZE
 from constants import MENU_BUTTON_WIDTH
@@ -37,16 +38,25 @@ def get_font(size: int) -> pygame.font.Font:
     return pygame.font.Font(None, size)
 
 
-def draw_title(screen: pygame.Surface, text: str, center_y: float, opacity: int = 255) -> None:
+def draw_title(screen: pygame.Surface, text: str, center_y: float, opacity: int = 255,
+               font_size: int = MENU_TITLE_FONT_SIZE) -> None:
     width = screen.get_width()
-    title = get_font(MENU_TITLE_FONT_SIZE).render(text, True, MENU_TEXT_COLOR)
+    title = get_font(font_size).render(text, True, MENU_TEXT_COLOR)
 
     # Shrink the title on narrow screens so it still fits
     if title.get_width() > width * 0.9:
-        title = get_font(int(MENU_TITLE_FONT_SIZE * width * 0.9 / title.get_width())).render(text, True, MENU_TEXT_COLOR)
+        title = get_font(int(font_size * width * 0.9 / title.get_width())).render(text, True, MENU_TEXT_COLOR)
 
     title.set_alpha(opacity)
     screen.blit(title, title.get_rect(center=(width/2, center_y)))
+
+
+def draw_heading(screen: pygame.Surface, title: str, subtitle: str | None = None, opacity: int = 255) -> None:
+    """The title of the pause and win screens, with an optional smaller line under it."""
+    height = screen.get_height()
+    draw_title(screen, title, height*0.35, opacity)
+    if subtitle:
+        draw_title(screen, subtitle, height*0.45, opacity, MENU_SUBTITLE_FONT_SIZE)
 
 
 def draw_shade(screen: pygame.Surface, opacity: int = MENU_OVERLAY_OPACITY) -> None:
@@ -145,10 +155,12 @@ async def menu_screen(
     title: str,
     options: list[str],
     escape_option: str | None = None,
+    subtitle: str | None = None,
 ) -> str | None:
     """Show a menu over the dimmed, frozen game until an option is picked.
 
-    Pressing Escape picks `escape_option` if one is given. Returns None if the window was closed.
+    Pressing Escape picks `escape_option` if one is given. `subtitle` is a smaller line
+    under the title. Returns None if the window was closed.
     """
     menu = ButtonMenu(options)
 
@@ -172,8 +184,10 @@ async def menu_screen(
         draw_scene(screen)
         draw_shade(screen)
 
-        draw_title(screen, title, height*0.35)
-        menu.draw(screen, height*0.55)
+        draw_heading(screen, title, subtitle)
+
+        # Buttons move down a little to make room for a subtitle
+        menu.draw(screen, height * (0.62 if subtitle else 0.55))
 
         pygame.display.flip()
 
