@@ -8,6 +8,8 @@ from constants import ASTEROID_MEDIUM_DESTRUCTION_SOUND_FILE_PATH
 from constants import ASTEROID_SMALL_DESTRUCTION_SOUNDS_FILE_PATHS
 from constants import COLOR_CHANGE_CHORD_FILE_PATHS
 from constants import WIN_SOUND_FILE_PATH
+from constants import MENU_MOVE_SOUND_FILE_PATH
+from constants import MENU_SELECT_SOUND_FILE_PATH
 
 class SoundMixer:
     # Sounds are loaded once and shared by every SoundMixer
@@ -30,6 +32,8 @@ class SoundMixer:
 
         SoundMixer.COLOR_CHANGE_CHORDS = [pygame.mixer.Sound(path) for path in COLOR_CHANGE_CHORD_FILE_PATHS]
         SoundMixer.WIN_SOUND = pygame.mixer.Sound(file = WIN_SOUND_FILE_PATH)
+        SoundMixer.MENU_MOVE_SOUND = pygame.mixer.Sound(file = MENU_MOVE_SOUND_FILE_PATH)
+        SoundMixer.MENU_SELECT_SOUND = pygame.mixer.Sound(file = MENU_SELECT_SOUND_FILE_PATH)
 
         SoundMixer._loaded = True
 
@@ -47,6 +51,10 @@ class SoundMixer:
                 random.choice(self.ASTEROID_SMALL_DESTRUCTION_SOUNDS).play()
             case "win":
                 self.WIN_SOUND.play()
+            case "menu_move":
+                self.MENU_MOVE_SOUND.play()
+            case "menu_select":
+                self.MENU_SELECT_SOUND.play()
             case _:
                 print("Invalid sound call")
 

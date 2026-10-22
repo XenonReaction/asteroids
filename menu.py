@@ -19,10 +19,15 @@ from constants import MENU_BUTTON_BOB_PIXELS
 from constants import MENU_BUTTON_BOB_SPEED
 from constants import MENU_OVERLAY_OPACITY
 from display import fit_to_window
+from sounds import SoundMixer
 
-# Keys for moving between options and picking one
-PREVIOUS_KEYS = (pygame.K_UP, pygame.K_w, pygame.K_LEFT, pygame.K_a)
-NEXT_KEYS = (pygame.K_DOWN, pygame.K_s, pygame.K_RIGHT, pygame.K_d)
+# Keys for moving around menus and picking an option
+UP_KEYS = (pygame.K_UP, pygame.K_w)
+DOWN_KEYS = (pygame.K_DOWN, pygame.K_s)
+LEFT_KEYS = (pygame.K_LEFT, pygame.K_a)
+RIGHT_KEYS = (pygame.K_RIGHT, pygame.K_d)
+PREVIOUS_KEYS = UP_KEYS + LEFT_KEYS
+NEXT_KEYS = DOWN_KEYS + RIGHT_KEYS
 SELECT_KEYS = (pygame.K_SPACE, pygame.K_RETURN, pygame.K_KP_ENTER)
 
 
@@ -83,36 +88,29 @@ async def timed_screen(
 
 
 class ButtonMenu:
-    """A column of buttons picked with the mouse, or WASD / arrow keys and Space / Enter."""
+    """A column of buttons, moved between with WASD / arrow keys and picked with Space / Enter."""
 
     def __init__(self, options: list[str], bob: bool = False) -> None:
         self.options = options
         self.selected = 0
         self.bob = bob
         self.elapsed = 0.0
-
-        # Where each button was last drawn, used to check mouse clicks
-        self.buttons: list[pygame.Rect] = []
+        self.sound_mixer = SoundMixer()
 
     def handle_event(self, event: pygame.event.Event) -> str | None:
         """Returns the option that was picked, if any."""
-        if event.type == pygame.KEYDOWN:
-            if event.key in PREVIOUS_KEYS:
-                self.selected = (self.selected - 1) % len(self.options)
-            elif event.key in NEXT_KEYS:
-                self.selected = (self.selected + 1) % len(self.options)
-            elif event.key in SELECT_KEYS:
-                return self.options[self.selected]
+        if event.type != pygame.KEYDOWN:
+            return None
 
-        elif event.type == pygame.MOUSEMOTION:
-            for i, button in enumerate(self.buttons):
-                if button.collidepoint(event.pos):
-                    self.selected = i
-
-        elif event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
-            for i, button in enumerate(self.buttons):
-                if button.collidepoint(event.pos):
-                    return self.options[i]
+        if event.key in PREVIOUS_KEYS:
+            self.selected = (self.selected - 1) % len(self.options)
+            self.sound_mixer.play("menu_move")
+        elif event.key in NEXT_KEYS:
+            self.selected = (self.selected + 1) % len(self.options)
+            self.sound_mixer.play("menu_move")
+        elif event.key in SELECT_KEYS:
+            self.sound_mixer.play("menu_select")
+            return self.options[self.selected]
 
         return None
 
@@ -130,7 +128,6 @@ class ButtonMenu:
         # Buttons can slowly bob up and down together
         bob = math.sin(self.elapsed * MENU_BUTTON_BOB_SPEED) * MENU_BUTTON_BOB_PIXELS if self.bob else 0
 
-        self.buttons = []
         for i, label in enumerate(labels):
             button = pygame.Rect(0, 0, width, MENU_BUTTON_HEIGHT)
             button.center = (screen.get_width()/2, top + bob + i * (MENU_BUTTON_HEIGHT + MENU_BUTTON_SPACING))
@@ -140,8 +137,6 @@ class ButtonMenu:
             pygame.draw.rect(screen, fill, button)
             pygame.draw.rect(screen, MENU_TEXT_COLOR, button, MENU_BUTTON_LINE_WIDTH)
             screen.blit(label, label.get_rect(center=button.center))
-
-            self.buttons.append(button)
 
 
 async def menu_screen(
@@ -164,6 +159,7 @@ async def menu_screen(
             if event.type == pygame.QUIT:
                 return None
             if escape_option and event.type == pygame.KEYDOWN and event.key == pygame.K_ESCAPE:
+                menu.sound_mixer.play("menu_select")
                 return escape_option
             choice = menu.handle_event(event)
             if choice:

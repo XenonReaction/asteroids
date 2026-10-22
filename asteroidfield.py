@@ -5,6 +5,7 @@ import pygame
 from asteroid import Asteroid
 from constants import *
 from progress_bar import ProgressBar
+from settings import Settings
 
 # Each edge is (direction asteroids move in, function giving a spawn point from
 # a 0-1 position along the edge and the current screen width and height)
@@ -15,6 +16,8 @@ class AsteroidField(pygame.sprite.Sprite):
     containers: pygame.sprite.Group
     # Set by the game, asteroids come more often and faster as it fills
     progress_bar: ProgressBar
+    # Set by the game, the chosen difficulty
+    settings: Settings
 
     edges: list[Edge] = [
         (
@@ -52,8 +55,8 @@ class AsteroidField(pygame.sprite.Sprite):
     def update(self, dt: float) -> None:
         # Goes from 0 to 1 as the progress bar fills
         difficulty = self.progress_bar.fraction()
-        spawn_multiplier = 1 + difficulty * (ASTEROID_MAX_SPAWN_MULTIPLIER - 1)
-        speed_multiplier = 1 + difficulty * (ASTEROID_MAX_SPEED_MULTIPLIER - 1)
+        spawn_multiplier = (1 + difficulty * (ASTEROID_MAX_SPAWN_MULTIPLIER - 1)) * self.settings.spawn_multiplier()
+        speed_multiplier = (1 + difficulty * (ASTEROID_MAX_SPEED_MULTIPLIER - 1)) * self.settings.speed_multiplier()
 
         self.spawn_timer += dt
         if self.spawn_timer > ASTEROID_SPAWN_RATE_SECONDS / spawn_multiplier:

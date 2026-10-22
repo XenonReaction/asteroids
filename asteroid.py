@@ -10,15 +10,17 @@ from constants import ASTEROID_MAX_CRATERS
 from constants import ASTEROID_CRATER_MIN_SIZE
 from constants import ASTEROID_CRATER_MAX_SIZE
 from constants import ASTEROID_CRATER_LINE_WIDTH
-from constants import ASTEROID_SPLIT_POINTS
 from logger import log_event
 from progress_bar import ProgressBar
+from settings import Settings
 
 from sounds import SoundMixer
 
 class Asteroid(CircleShape):
     # Set by the game, splits fill it up and it decides what color asteroids are
     progress_bar: ProgressBar
+    # Set by the game, decides how much each split adds to the progress bar
+    settings: Settings
 
     def __init__(self, x: float, y: float, radius: float) -> None:
         super().__init__(x, y, radius)
@@ -72,7 +74,7 @@ class Asteroid(CircleShape):
 
         # Play a chord whenever this split changes the asteroids' color
         old_section = self.progress_bar.section_index()
-        self.progress_bar.add(ASTEROID_SPLIT_POINTS)
+        self.progress_bar.add(self.settings.split_points())
         new_section = self.progress_bar.section_index()
         if new_section != old_section:
             self.sound_mixer.play_chord(new_section - 1)

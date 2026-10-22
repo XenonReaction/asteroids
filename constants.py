@@ -25,7 +25,6 @@ ASTEROID_MIN_RADIUS = 20
 ASTEROID_KINDS = 3
 ASTEROID_SPAWN_RATE_SECONDS = 0.8
 ASTEROID_MAX_RADIUS = ASTEROID_MIN_RADIUS * ASTEROID_KINDS
-ASTEROID_SPLIT_POINTS = 5  # added to the progress bar each time an asteroid splits
 # How much more often asteroids spawn, and how much faster they move, once the bar is full
 ASTEROID_MAX_SPAWN_MULTIPLIER = 3
 ASTEROID_MAX_SPEED_MULTIPLIER = 2
@@ -50,6 +49,8 @@ COLOR_CHANGE_CHORD_FILE_PATHS = [
     "./resources/sounds/chord_a_major.ogg"
 ]
 WIN_SOUND_FILE_PATH = "./resources/sounds/8_bit_win.ogg"
+MENU_MOVE_SOUND_FILE_PATH = "./resources/sounds/8_bit_move_beep.ogg"
+MENU_SELECT_SOUND_FILE_PATH = "./resources/sounds/8_bit_select_beep.ogg"
 
 # Progress bar (asteroids take the color of the section the bar has filled up to)
 PROGRESS_BAR_COLORS = ["purple", "blue", "green", "yellow", "orange", "red"]
@@ -72,6 +73,7 @@ MENU_TITLE_FONT_SIZE = 160
 MENU_TEXT_COLOR = "white"
 MENU_START_ASTEROIDS = 10
 MENU_BUTTON_TEXT = "START"
+MENU_SETTINGS_TEXT = "SETTINGS"
 MENU_BUTTON_FONT_SIZE = 56
 MENU_BUTTON_WIDTH = 260
 MENU_BUTTON_HEIGHT = 80
@@ -82,6 +84,24 @@ MENU_BUTTON_SELECTED_COLOR = "gray20"
 MENU_BUTTON_BOB_PIXELS = 12
 MENU_BUTTON_BOB_SPEED = 2
 MENU_OVERLAY_OPACITY = 160  # how dark the game gets behind the pause and win menus (0-255)
+
+# Settings (difficulty, every setting goes from 1 for easiest to 10 for hardest)
+SETTING_MIN = 1
+SETTING_MAX = 10
+SETTINGS_ASTEROID_AMOUNT_STEP = 0.2  # each step spawns asteroids 0.2x more often, 10 is 2.8x
+SETTINGS_ASTEROID_SPEED_STEP = 0.15  # each step makes asteroids 0.15x faster, 10 is 2.35x
+SETTINGS_TITLE = "Settings"
+SETTINGS_FONT_SIZE = 44
+SETTINGS_BACK_TEXT = "Back"
+SETTINGS_SQUARE_SIZE = 56
+SETTINGS_SQUARE_GAP = 10  # space between squares
+SETTINGS_SQUARE_LINE_WIDTH = 2
+SETTINGS_LABEL_GAP = 40  # space between a label and its squares
+SETTINGS_ROW_SPACING = 30  # space between rows
+SETTINGS_CHOSEN_COLOR = "white"  # fill of the square for each setting's current value
+SETTINGS_CURSOR_COLOR = "yellow"  # border of the square the cursor is on
+SETTINGS_CURSOR_LINE_WIDTH = 4
+SETTINGS_INACTIVE_TEXT_COLOR = "gray60"  # labels of the rows the cursor isn't on
 
 # Pause and win menus
 PAUSE_TITLE = "Paused"

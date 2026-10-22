@@ -9,6 +9,9 @@ from constants import MENU_TITLE
 from constants import MENU_START_ASTEROIDS
 from constants import MENU_OVERLAY_OPACITY
 from constants import MENU_BUTTON_TEXT
+from constants import MENU_SETTINGS_TEXT
+from constants import SETTINGS_TITLE
+from constants import SETTINGS_BACK_TEXT
 from constants import PAUSE_TITLE
 from constants import PAUSE_CONTINUE_TEXT
 from constants import PAUSE_QUIT_TEXT
@@ -25,6 +28,8 @@ from menu import draw_shade
 from menu import menu_screen
 from menu import timed_screen
 from starfield import Starfield
+from settings import Settings
+from settings import SettingsMenu
 from progress_bar import ProgressBar
 from logger import log_state
 from logger import log_event
@@ -54,24 +59,30 @@ async def main():
     # Initialize Clock
     fps_clock = pygame.time.Clock()
 
+    # Difficulty, changed in the settings menu and kept until the page is reloaded
+    settings = Settings()
+
     # Game cycle: main menu -> play until the player dies, wins, or quits -> back to the main menu
     while True:
         # New background each time the main menu loads, kept for the games that follow
         background = Starfield(*pygame.display.get_surface().get_size())
 
-        if not await main_menu(fps_clock, background):
+        if not await main_menu(fps_clock, background, settings):
             return
 
         result = PLAY_AGAIN
         while result == PLAY_AGAIN:
-            result = await play(fps_clock, background)
+            result = await play(fps_clock, background, settings)
 
         if result == WINDOW_CLOSED:
             return
 
 
-async def main_menu(fps_clock: pygame.time.Clock, background: Starfield) -> bool:
-    """Show the main menu until START is picked. Returns False if the window was closed."""
+async def main_menu(fps_clock: pygame.time.Clock, background: Starfield, settings: Settings) -> bool:
+    """Show the main menu until START is picked. Returns False if the window was closed.
+
+    SETTINGS opens the settings menu in place of the buttons, and changes are saved into `settings`.
+    """
 
     # Initialize groups, the menu only has asteroids floating in the background
     updatable = pygame.sprite.Group()
@@ -86,6 +97,10 @@ async def main_menu(fps_clock: pygame.time.Clock, background: Starfield) -> bool
     Asteroid.progress_bar = menu_progress_bar
     AsteroidField.progress_bar = menu_progress_bar
 
+    # Menu asteroids always use the easiest settings so the menu stays calm
+    Asteroid.settings = Settings()
+    AsteroidField.settings = Asteroid.settings
+
     asteroidfield = AsteroidField()
 
     # Start with some asteroids already on screen so the menu isn't empty
@@ -95,8 +110,10 @@ async def main_menu(fps_clock: pygame.time.Clock, background: Starfield) -> bool
         asteroid = Asteroid(random.uniform(0, width), random.uniform(0, height), radius)
         asteroid.velocity = pygame.Vector2(random.randint(40, 100), 0).rotate(random.uniform(0, 360))
 
-    # The START button sits under the title and slowly bobs up and down
-    menu = ButtonMenu([MENU_BUTTON_TEXT], bob=True)
+    # The buttons sit under the title and slowly bob up and down
+    menu = ButtonMenu([MENU_BUTTON_TEXT, MENU_SETTINGS_TEXT], bob=True)
+    settings_menu = SettingsMenu(settings)
+    showing_settings = False
 
     # Reset the clock so time spent elsewhere doesn't count as one big frame
     fps_clock.tick()
@@ -108,8 +125,16 @@ async def main_menu(fps_clock: pygame.time.Clock, background: Starfield) -> bool
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 return False
-            if menu.handle_event(event) == MENU_BUTTON_TEXT:
-                return True
+
+            if showing_settings:
+                if settings_menu.handle_event(event) == SETTINGS_BACK_TEXT:
+                    showing_settings = False
+            else:
+                choice = menu.handle_event(event)
+                if choice == MENU_BUTTON_TEXT:
+                    return True
+                if choice == MENU_SETTINGS_TEXT:
+                    showing_settings = True
 
         screen = fit_to_window()
         height = screen.get_height()
@@ -122,8 +147,12 @@ async def main_menu(fps_clock: pygame.time.Clock, background: Starfield) -> bool
         for sprite in drawable:
             sprite.draw(screen)
 
-        draw_title(screen, MENU_TITLE, height*0.3)
-        menu.draw(screen, height*0.55)
+        if showing_settings:
+            draw_title(screen, SETTINGS_TITLE, height*0.2)
+            settings_menu.draw(screen, height*0.4)
+        else:
+            draw_title(screen, MENU_TITLE, height*0.3)
+            menu.draw(screen, height*0.55)
 
         pygame.display.flip()
 
@@ -131,7 +160,7 @@ async def main_menu(fps_clock: pygame.time.Clock, background: Starfield) -> bool
         await asyncio.sleep(0)
 
 
-async def play(fps_clock: pygame.time.Clock, background: Starfield) -> str:
+async def play(fps_clock: pygame.time.Clock, background: Starfield, settings: Settings) -> str:
     """Play one game. Returns BACK_TO_MENU, PLAY_AGAIN, or WINDOW_CLOSED."""
 
     # Initialize groups
@@ -154,6 +183,10 @@ async def play(fps_clock: pygame.time.Clock, background: Starfield) -> str:
     Asteroid.progress_bar = progress_bar
     AsteroidField.progress_bar = progress_bar
     Player.progress_bar = progress_bar
+
+    # Use the difficulty picked in the settings menu
+    Asteroid.settings = settings
+    AsteroidField.settings = settings
 
     # Initialize AsteroidField to spawn asteroids from random screen edges
     asteroidfield = AsteroidField()
